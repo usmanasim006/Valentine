@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Priority Message for You</title>
+    <style>
+        :root {
+            --bg: #fdfdfd;
+            --text: #1a1a1a;
+            --accent: #e74c3c;
+            --font: 'Courier New', Courier, monospace;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .screen { 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            width: 90%; 
+            max-width: 350px; 
+            animation: fadeIn 0.5s ease;
+        }
+        .active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        h1 { font-size: 1.5rem; margin-bottom: 10px; }
+        p { font-size: 0.9rem; line-height: 1.4; }
+
+        .btn {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-family: var(--font);
+            font-weight: bold;
+            border-radius: 8px;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        /* Loading Bar */
+        .bar-container { width: 100%; height: 12px; background: #eee; border-radius: 10px; margin: 20px 0; border: 1px solid #ddd; }
+        #progress { width: 0%; height: 100%; background: #000; border-radius: 10px; transition: width 0.1s; }
+
+        /* Canvas/Signature */
+        canvas { 
+            border: 2px dashed #bbb; 
+            background: #fff; 
+            touch-action: none; 
+            border-radius: 8px;
+            width: 100%;
+            height: 180px;
+        }
+
+        /* Game Grid */
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0; width: 100%; }
+        .cell { 
+            background: #fff; 
+            border: 2px solid #000; 
+            height: 80px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 2rem; 
+            border-radius: 8px;
+        }
+        .winner { background: #fff5f5; color: var(--accent); border-color: var(--accent); }
+
+        /* Proposal Buttons */
+        .btn-wrap { position: relative; width: 100%; height: 200px; margin-top: 20px; }
+        .yes-btn { position: absolute; top: 0; left: 0; width: 100% !important; z-index: 10; }
+        .no-btn { 
+            position: absolute; 
+            top: 80px; 
+            left: 0; 
+            background: #888 !important; 
+            width: 100% !important;
+            transition: all 0.2s ease;
+        }
+
+        .final-img { width: 100%; border-radius: 15px; margin-top: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+    <div id="s1" class="screen active">
+        <h1>SYSTEM BOOTING...</h1>
+        <div class="bar-container"><div id="progress"></div></div>
+        <p id="load-val">0%</p>
+    </div>
+
+    <div id="s2" class="screen">
+        <h1 style="color:var(--accent); font-size: 4rem; margin:0;">404</h1>
+        <h1>CRITICAL ERROR</h1>
+        <p>The file "Valentine_2024" is missing or corrupted. Attempting manual override...</p>
+        <button class="btn" onclick="next('s3')">Run Recovery.exe</button>
+    </div>
+
+    <div id="s3" class="screen">
+        <p>STEP 1/3: CONTRACT VERIFICATION</p>
+        <h2 style="font-size: 1.1rem;">"I acknowledge that Usman loves me the most."</h2>
+        <canvas id="canvas"></canvas>
+        <p style="font-size: 0.7rem; color: #777; margin-top: 5px;">Sign to confirm legal accuracy</p>
+        <button class="btn" onclick="next('s4')">Next Step</button>
+    </div>
+
+    <div id="s4" class="screen">
+        <p>STEP 2/3: SECURITY CHALLENGE</p>
+        <h1>Win to Unlock</h1>
+        <div class="grid" id="grid"></div>
+        <h2 id="msg">Your move!</h2>
+        <button id="next-game" class="btn" style="display:none;" onclick="next('s5')">Unlock Secret</button>
+    </div>
+
+    <div id="s5" class="screen">
+        <p>STEP 3/3: FINAL SELECTION</p>
+        <h1 style="font-size: 1.8rem;">Will you be my Valentine?</h1>
+        <div class="btn-wrap">
+            <button class="btn yes-btn" onclick="next('s6')">YES! ❤️</button>
+            <button class="btn no-btn" id="no-btn" onmouseover="move()" onclick="move()">No</button>
+        </div>
+    </div>
+
+    <div id="s6" class="screen">
+        <h1 style="color:var(--accent)">SUCCESS! ❤️</h1>
+        <p>Connection fully restored.</p>
+        <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHpueG9mZjR4dmhxZzBxdm54ZzBxdm54ZzBxdm54ZzBxdm54ZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/LpDmM2dQgo8CRnpf97/giphy.gif" class="final-img">
+        <h3>I love you!</h3>
+    </div>
+
+    <script>
+        // Navigation logic
+        function next(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 's4') startTTT();
+        }
+
+        // Loading bar logic
+        let p = 0;
+        let iv = setInterval(() => {
+            p++;
+            document.getElementById('progress').style.width = p+'%';
+            document.getElementById('load-val').innerText = p+'%';
+            if(p>=100) { clearInterval(iv); setTimeout(()=>next('s2'), 500); }
+        }, 30);
+
+        // Signature logic
+        const can = document.getElementById('canvas');
+        const ctx = can.getContext('2d');
+        let draw = false;
+        
+        const getPos = (e) => {
+            const rect = can.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        };
+
+        const start = (e) => { draw = true; ctx.beginPath(); const {x,y} = getPos(e); ctx.moveTo(x,y); };
+        const moveDraw = (e) => { 
+            if(!draw) return; 
+            const {x,y} = getPos(e); 
+            ctx.lineTo(x,y); ctx.stroke(); 
+        };
+
+        can.addEventListener('mousedown', start);
+        can.addEventListener('mousemove', moveDraw);
+        window.addEventListener('mouseup', () => draw = false);
+        can.addEventListener('touchstart', start);
+        can.addEventListener('touchmove', moveDraw);
+
+        // Tic Tac Toe (Rigged for user to win)
+        function startTTT() {
+            const g = document.getElementById('grid');
+            g.innerHTML = '';
+            for(let i=0; i<9; i++) {
+                let c = document.createElement('div');
+                c.className = 'cell';
+                c.onclick = () => {
+                    if(c.innerText) return;
+                    c.innerText = 'X';
+                    c.classList.add('winner');
+                    document.getElementById('msg').innerText = "Winner! System Unlocked.";
+                    document.getElementById('next-game').style.display = 'block';
+                };
+                g.appendChild(c);
+            }
+        }
+
+        // Runaway "No" Button
+        function move() {
+            const b = document.getElementById('no-btn');
+            const wrap = document.querySelector('.btn-wrap');
+            const maxX = wrap.clientWidth - b.clientWidth;
+            const maxY = window.innerHeight - 150;
+            
+            b.style.position = 'fixed';
+            b.style.width = '100px';
+            b.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+            b.style.top = Math.random() * (window.innerHeight - 100) + 'px';
+        }
+    </script>
+</body>
+</html>
